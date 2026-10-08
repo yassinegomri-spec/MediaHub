@@ -9,10 +9,10 @@ class ContenuController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    
+    public function index($tri = 'recent')
     {
-       return 'Liste des contenus multimédias';
-
+        return 'Liste des contenus - Tri : ' . $tri;
     }
 
     /**
@@ -61,4 +61,5 @@ class ContenuController extends Controller
     {
         return 'Suppression du contenu';
     }
+    
 }
