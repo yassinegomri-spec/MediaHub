@@ -26,4 +26,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::get('/categories', [CategorieController::class, 'index'])
     ->name('categories.index');
-    
+
+    Route::resource('contenus', ContenuController::class)
+    ->parameters(['contenus' => 'contenu']);

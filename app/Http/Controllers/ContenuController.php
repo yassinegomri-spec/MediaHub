@@ -3,36 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Publication;
 
 class ContenuController extends Controller
 {
     public function index(?string $tri = 'recent')
-    {
-        $contenus = [
-            (object) [
-                'titre' => 'Court-métrage documentaire',
-                'description' => 'Un aperçu de la vie urbaine.',
-                'misEnAvant' => true,
-            ],
+{
+    $requete = Publication::query()
+        ->with(['categorie', 'auteur'])
+        ->withCount('commentaires');
 
-            (object) [
-                'titre' => 'Podcast technologie',
-                'description' => 'Actualités du développement web.',
-                'misEnAvant' => false,
-            ],
-
-            (object) [
-                'titre' => 'Galerie photographique',
-                'description' => 'Une collection de photographies contemporaines.',
-                'misEnAvant' => false,
-            ],
-        ];
-
-        return view('contenus.index', [
-            'contenus' => $contenus,
-            'tri' => $tri,
-        ]);
+    if ($tri === 'ancien') {
+        $requete->oldest();
+    } elseif ($tri === 'titre') {
+        $requete->orderBy('titre');
+    } else {
+        $tri = 'recent';
+        $requete->latest();
     }
+
+    $publications = $requete->paginate(9)->withQueryString();
+
+    return view('contenus.index', compact('publications', 'tri'));
+}
+
 
     public function create()
     {
@@ -44,12 +38,17 @@ class ContenuController extends Controller
         return 'Enregistrement du contenu';
     }
 
-    public function show(string $id)
-    {
-        return view('contenus.show', [
-            'id' => $id,
-        ]);
-    }
+    public function show(Publication $contenu)
+{
+    $contenu->load([
+        'categorie',
+        'auteur',
+        'commentaires.auteur',
+    ]);
+
+    return view('contenus.show', compact('contenu'));
+}
+
 
     public function edit(string $id)
     {

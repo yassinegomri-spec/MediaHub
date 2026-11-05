@@ -2,10 +2,7 @@
 
 @section('titre', 'Contenus — MediaHub')
 
-@section(
-    'meta_description',
-    'Découvrez les contenus multimédias disponibles sur MediaHub.'
-)
+@section('meta_description', 'Découvrez les contenus multimédias disponibles sur MediaHub.')
 
 @section('contenu')
     <section class="page-contenus">
@@ -16,32 +13,44 @@
 
             <p>
                 Découvrez les dernières publications disponibles.
-                Tri actuel : <strong>{{ $tri }}</strong>    
+                Tri actuel : <strong>{{ $tri }}</strong>
             </p>
         </div>
 
-        <div class="grille- contenus">
-            @forelse ($contenus as $contenu)
-                <x-carte
-                    :titre="$contenu->titre"
-                    :mis-en-avant="$contenu->misEnAvant ?? false"
-                >
+        <div class="grille-contenus">
+            @forelse ($publications as $publication)
+                <x-carte :titre="$publication->titre">
                     <p>
-                        {{ $contenu->description }}
+                        {{ \Illuminate\Support\Str::limit($publication->contenu, 180) }}
+                    </p>
+
+                    <p>
+                        Catégorie :
+                        {{ $publication->categorie?->nom ?? 'Sans catégorie' }}  
+
+
+                        Auteur :
+                        {{ $publication->auteur?->name ?? 'Auteur inconnu' }}  
+
+
+                        Commentaires :
+                        {{ $publication->commentaires_count }}
                     </p>
 
                     <a
                         class="lien-carte"
-                        href="{{ route('contenus.show', ['contenu' => $loop->iteration]) }}"
+                        href="{{ route('contenus.show', $publication) }}"
                     >
                         Voir le contenu
                     </a>
                 </x-carte>
             @empty
                 <p class="message-vide">
-                    Aucun contenu disponible pour le moment.
+                    Aucune publication disponible pour le moment.
                 </p>
             @endforelse
         </div>
+
+        {{ $publications->links() }}
     </section>
 @endsection
