@@ -15,7 +15,11 @@ Route::get('/a-propos', [PageController::class, 'aPropos'])
 Route::get('/contenus/tri/{tri?}', [ContenuController::class, 'index'])
     ->name('contenus.tri');
 
-Route::resource('contenus', ContenuController::class);
+Route::resource('contenus', ContenuController::class)
+    ->parameters(['contenus' => 'contenu']);
+
+Route::resource('categories', CategorieController::class)
+    ->except(['show']);
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get(
@@ -23,9 +27,3 @@ Route::prefix('admin')->name('admin.')->group(function () {
         [AdminController::class, 'index']
     )->name('dashboard');
 });
-
-Route::get('/categories', [CategorieController::class, 'index'])
-    ->name('categories.index');
-
-    Route::resource('contenus', ContenuController::class)
-    ->parameters(['contenus' => 'contenu']);

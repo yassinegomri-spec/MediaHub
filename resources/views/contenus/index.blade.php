@@ -17,6 +17,13 @@
             </p>
         </div>
 
+        {{-- Lien de création : juste après l’en-tête --}}
+        <p>
+            <a class="bouton" href="{{ route('contenus.create') }}">
+                Créer une publication
+            </a>
+        </p>
+
         <div class="grille-contenus">
             @forelse ($publications as $publication)
                 <x-carte :titre="$publication->titre">
@@ -26,23 +33,43 @@
 
                     <p>
                         Catégorie :
-                        {{ $publication->categorie?->nom ?? 'Sans catégorie' }}  
-
+                        {{ $publication->categorie?->nom ?? 'Sans catégorie' }}
 
                         Auteur :
-                        {{ $publication->auteur?->name ?? 'Auteur inconnu' }}  
-
+                        {{ $publication->auteur?->name ?? 'Auteur inconnu' }}
 
                         Commentaires :
                         {{ $publication->commentaires_count }}
                     </p>
 
-                    <a
-                        class="lien-carte"
-                        href="{{ route('contenus.show', $publication) }}"
-                    >
-                        Voir le contenu
-                    </a>
+                    {{-- Actions de la publication --}}
+                    <div class="actions-crud">
+                        <a
+                            class="lien-carte"
+                            href="{{ route('contenus.show', $publication) }}"
+                        >
+                            Voir le contenu
+                        </a>
+
+                        <a
+                            class="lien-carte"
+                            href="{{ route('contenus.edit', $publication) }}"
+                        >
+                            Modifier
+                        </a>
+
+                        <form
+                            method="POST"
+                            action="{{ route('contenus.destroy', $publication) }}"
+                        >
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit">
+                                Supprimer
+                            </button>
+                        </form>
+                    </div>
                 </x-carte>
             @empty
                 <p class="message-vide">

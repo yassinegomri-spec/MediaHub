@@ -18,8 +18,19 @@
     @include('partials.navigation')
 
     <main class="conteneur">
-        @yield('contenu')
-    </main>
+        @if (session('succes'))
+    <div class="alerte alerte-succes">
+        {{ session('succes') }}
+    </div>
+    @endif
+
+    @if (session('erreur'))
+    <div class="alerte alerte-erreur">
+        {{ session('erreur') }}
+    </div>
+    @endif
+
+    @yield('contenu')
 
     @include('partials.pied-de-page')
 
