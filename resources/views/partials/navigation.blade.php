@@ -16,6 +16,18 @@
             <a href="{{ route('a-propos') }}">
                 À propos
             </a>
+            @guest
+                <a href="{{ route('login') }}">Connexion</a>
+                <a href="{{ route('inscription') }}">Inscription</a>
+            @endguest
+
+            @auth
+                <form method="POST" action="{{ route('deconnexion') }}">
+             @csrf
+                <button type="submit">Déconnexion</button>
+                </form>
+@endauth
+
         </div>
     </div>
 </nav>

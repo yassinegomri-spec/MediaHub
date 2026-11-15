@@ -42,16 +42,15 @@ class ContenuController extends Controller
     public function store(StorePublicationRequest $request)
 {
     $contenu = new Publication($request->validated());
-
-    $contenu->user_id = Auth::id()
-        ?? $this->auteurDeDemonstration()->id;
-
+    $contenu->user_id = Auth::id();
     $contenu->save();
 
     return redirect()
         ->route('contenus.show', $contenu)
         ->with('succes', 'Publication créée avec succès.');
 }
+
+
 
     public function show(Publication $contenu)
     {
@@ -60,30 +59,37 @@ class ContenuController extends Controller
         return view('contenus.show', compact('contenu'));
     }
 
-    public function edit(Publication $contenu)
-    {
-        $categories = Categorie::orderBy('nom')->get();
-
-        return view('contenus.edit', compact('contenu', 'categories'));
-    }
-
-    public function update(UpdatePublicationRequest $request, Publication $contenu)
-    {
-        $contenu->update($request->validated());
-
-        return redirect()
-            ->route('contenus.show', $contenu)
-            ->with('succes', 'Publication mise à jour avec succès.');
-    }
-
-    public function destroy(Publication $contenu)
+   public function edit(Publication $contenu)
 {
+    $this->authorize('update', $contenu);
+
+    $categories = Categorie::orderBy('nom')->get();
+
+    return view('contenus.edit', compact('contenu', 'categories'));
+}
+
+public function update(UpdatePublicationRequest $request, Publication $contenu)
+{
+    $this->authorize('update', $contenu);
+
+    $contenu->update($request->validated());
+
+    return redirect()
+        ->route('contenus.show', $contenu)
+        ->with('succes', 'Publication mise à jour avec succès.');
+}
+
+public function destroy(Publication $contenu)
+{
+    $this->authorize('delete', $contenu);
+
     $contenu->forceDelete();
 
     return redirect()
         ->route('contenus.index')
         ->with('succes', 'Publication supprimée définitivement.');
 }
+
 
 
     private function auteurDeDemonstration(): User

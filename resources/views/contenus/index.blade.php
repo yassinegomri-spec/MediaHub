@@ -17,12 +17,20 @@
             </p>
         </div>
 
-        {{-- Lien de création : juste après l’en-tête --}}
-        <p>
-            <a class="bouton" href="{{ route('contenus.create') }}">
-                Créer une publication
-            </a>
-        </p>
+        {{-- Lien de création affiché selon l'état de connexion --}}
+        @auth
+            <p>
+                <a class="bouton" href="{{ route('contenus.create') }}">
+                    Créer une publication
+                </a>
+            </p>
+        @else
+            <p>
+                <a class="bouton" href="{{ route('login') }}">
+                    Connectez-vous pour créer une publication
+                </a>
+            </p>
+        @endauth
 
         <div class="grille-contenus">
             @forelse ($publications as $publication)
@@ -42,7 +50,6 @@
                         {{ $publication->commentaires_count }}
                     </p>
 
-                    {{-- Actions de la publication --}}
                     <div class="actions-crud">
                         <a
                             class="lien-carte"
@@ -51,24 +58,28 @@
                             Voir le contenu
                         </a>
 
-                        <a
-                            class="lien-carte"
-                            href="{{ route('contenus.edit', $publication) }}"
-                        >
-                            Modifier
-                        </a>
+                        @can('update', $publication)
+                            <a
+                                class="lien-carte"
+                                href="{{ route('contenus.edit', $publication) }}"
+                            >
+                                Modifier
+                            </a>
+                        @endcan
 
-                        <form
-                            method="POST"
-                            action="{{ route('contenus.destroy', $publication) }}"
-                        >
-                            @csrf
-                            @method('DELETE')
+                        @can('delete', $publication)
+                            <form
+                                method="POST"
+                                action="{{ route('contenus.destroy', $publication) }}"
+                            >
+                                @csrf
+                                @method('DELETE')
 
-                            <button type="submit">
-                                Supprimer
-                            </button>
-                        </form>
+                                <button type="submit">
+                                    Supprimer
+                                </button>
+                            </form>
+                        @endcan
                     </div>
                 </x-carte>
             @empty
