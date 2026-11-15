@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePublicationRequest;
+use App\Http\Requests\UpdatePublicationRequest;
 use App\Models\Categorie;
 use App\Models\Publication;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class ContenuController extends Controller
 {
@@ -27,9 +27,7 @@ class ContenuController extends Controller
             $requete->latest();
         }
 
-        $publications = $requete
-            ->paginate(9)
-            ->withQueryString();
+        $publications = $requete->paginate(9)->withQueryString();
 
         return view('contenus.index', compact('publications', 'tri'));
     }
@@ -41,40 +39,23 @@ class ContenuController extends Controller
         return view('contenus.create', compact('categories'));
     }
 
-    public function store(Request $request)
-    {
-        $donnees = $request->validate([
-            'titre' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('publications', 'titre'),
-            ],
-            'contenu' => ['required', 'string'],
-            'categorie_id' => [
-                'required',
-                'integer',
-                Rule::exists('categories', 'id'),
-            ],
-        ]);
+    public function store(StorePublicationRequest $request)
+{
+    $contenu = new Publication($request->validated());
 
-        $donnees['user_id'] = Auth::id()
-            ?? $this->auteurDeDemonstration()->id;
+    $contenu->user_id = Auth::id()
+        ?? $this->auteurDeDemonstration()->id;
 
-        $contenu = Publication::create($donnees);
+    $contenu->save();
 
-        return redirect()
-            ->route('contenus.show', $contenu)
-            ->with('succes', 'Publication créée avec succès.');
-    }
+    return redirect()
+        ->route('contenus.show', $contenu)
+        ->with('succes', 'Publication créée avec succès.');
+}
 
     public function show(Publication $contenu)
     {
-        $contenu->load([
-            'categorie',
-            'auteur',
-            'commentaires.auteur',
-        ]);
+        $contenu->load(['categorie', 'auteur', 'commentaires.auteur']);
 
         return view('contenus.show', compact('contenu'));
     }
@@ -83,31 +64,12 @@ class ContenuController extends Controller
     {
         $categories = Categorie::orderBy('nom')->get();
 
-        return view(
-            'contenus.edit',
-            compact('contenu', 'categories')
-        );
+        return view('contenus.edit', compact('contenu', 'categories'));
     }
 
-    public function update(Request $request, Publication $contenu)
+    public function update(UpdatePublicationRequest $request, Publication $contenu)
     {
-        $donnees = $request->validate([
-            'titre' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('publications', 'titre')
-                    ->ignore($contenu->id),
-            ],
-            'contenu' => ['required', 'string'],
-            'categorie_id' => [
-                'required',
-                'integer',
-                Rule::exists('categories', 'id'),
-            ],
-        ]);
-
-        $contenu->update($donnees);
+        $contenu->update($request->validated());
 
         return redirect()
             ->route('contenus.show', $contenu)
@@ -115,13 +77,14 @@ class ContenuController extends Controller
     }
 
     public function destroy(Publication $contenu)
-    {
-        $contenu->delete();
+{
+    $contenu->forceDelete();
 
-        return redirect()
-            ->route('contenus.index')
-            ->with('succes', 'Publication supprimée avec succès.');
-    }
+    return redirect()
+        ->route('contenus.index')
+        ->with('succes', 'Publication supprimée définitivement.');
+}
+
 
     private function auteurDeDemonstration(): User
     {
@@ -131,7 +94,7 @@ class ContenuController extends Controller
             return $auteur;
         }
 
-        // Auteur provisoire avant l’ajout de l’authentification en semaine 8.
+        // Auteur provisoire avant l'authentification (semaine 8).
         return User::query()->create([
             'name' => 'Auteur de démonstration',
             'email' => 'demo@mediahub.test',

@@ -9,8 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Publication extends Model
 {
 use HasFactory, SoftDeletes;
-protected $fillable = [
-'titre', 'contenu', 'categorie_id', 'user_id',
+protected $fillable = [ 'titre', 'contenu', 'categorie_id', 'user_id',
 ];
 public function categorie(): BelongsTo
 {

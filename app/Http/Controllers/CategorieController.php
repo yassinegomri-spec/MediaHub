@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategorieRequest;
+use App\Http\Requests\UpdateCategorieRequest;
 use App\Models\Categorie;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class CategorieController extends Controller
 {
@@ -24,23 +23,9 @@ class CategorieController extends Controller
         return view('categories.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreCategorieRequest $request)
     {
-        $request->merge([
-            'slug' => $this->genererSlug($request),
-        ]);
-
-        $donnees = $request->validate([
-            'nom' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('categories', 'slug'),
-            ],
-        ]);
-
-        Categorie::create($donnees);
+        Categorie::create($request->validated());
 
         return redirect()
             ->route('categories.index')
@@ -52,23 +37,9 @@ class CategorieController extends Controller
         return view('categories.edit', compact('categorie'));
     }
 
-    public function update(Request $request, Categorie $categorie)
+    public function update(UpdateCategorieRequest $request, Categorie $categorie)
     {
-        $request->merge([
-            'slug' => $this->genererSlug($request),
-        ]);
-
-        $donnees = $request->validate([
-            'nom' => ['required', 'string', 'max:255'],
-            'slug' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('categories', 'slug')->ignore($categorie->id),
-            ],
-        ]);
-
-        $categorie->update($donnees);
+        $categorie->update($request->validated());
 
         return redirect()
             ->route('categories.index')
@@ -81,10 +52,7 @@ class CategorieController extends Controller
         if ($categorie->publications()->withTrashed()->exists()) {
             return redirect()
                 ->route('categories.index')
-                ->with(
-                    'erreur',
-                    'Cette catégorie est encore associée à une publication.'
-                );
+                ->with('erreur', 'Cette catégorie est encore associée à une publication.');
         }
 
         $categorie->delete();
@@ -92,17 +60,5 @@ class CategorieController extends Controller
         return redirect()
             ->route('categories.index')
             ->with('succes', 'Catégorie supprimée avec succès.');
-    }
-
-    private function genererSlug(Request $request): string
-    {
-        $valeur = $request->input('slug')
-            ?: $request->input('nom', '');
-
-        $slug = Str::slug($valeur);
-
-        return $slug !== ''
-            ? $slug
-            : 'categorie-' . Str::lower(Str::random(8));
     }
 }
