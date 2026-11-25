@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+
 class Publication extends Model
 {
 use HasFactory, SoftDeletes;
-protected $fillable = [ 'titre', 'contenu', 'categorie_id', 'user_id',
-];
+protected $fillable = [ 'titre', 'contenu', 'categorie_id', 'user_id','image',
+    'fichier_media','type_media','document_prive',
+    ];
 public function categorie(): BelongsTo
 {
 return $this->belongsTo(Categorie::class);
@@ -27,4 +30,27 @@ public function tags(): BelongsToMany
 {
 return $this->belongsToMany(Tag::class);
 }
+protected static function booted(): void
+{
+    static::deleting(function (Publication $publication): void {
+        if ($publication->image) {
+            Storage::disk('public')->delete($publication->image);
+        }
+
+        if ($publication->fichier_media) {
+            Storage::disk('public')->delete($publication->fichier_media);
+        }
+
+        if ($publication->document_prive) {
+            Storage::disk('local')->delete($publication->document_prive);
+        }
+    });
+}
+public function getUrlImageAttribute(): ?string
+{
+    return $this->image
+        ? Storage::disk('public')->url($this->image)
+        : null;
+}
+
 }   

@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('publications', function (Blueprint $table) {
+        $table->string('fichier_media')->nullable();
+        $table->string('type_media', 16)->nullable();
+        $table->string('document_prive')->nullable();
+});
+
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+       Schema::table('publications', function (Blueprint $table) {
+        $table->dropColumn([
+            'fichier_media',
+            'type_media',
+            'document_prive',
+        ]);
+    });
+    }
+};

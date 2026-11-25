@@ -64,4 +64,12 @@ class PublicationPolicy
     {
         return false;
     }
+
+    public function viewPrivateDocument(
+    User $user,
+    Publication $publication ): bool {
+    return $user->id === $publication->user_id
+        || $user->role === 'admin';
+}
+
 }

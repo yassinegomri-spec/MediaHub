@@ -55,4 +55,13 @@ Route::middleware(['auth', 'can:gerer-categories'])->group(function () {
         Route::get('/tableau-de-bord', [AdminController::class, 'index'])
             ->name('dashboard');
     });
+
+    Route::get(
+    '/contenus/{contenu}/document-prive',
+    [ContenuController::class, 'documentPrive']
+)
+    ->middleware('can:viewPrivateDocument,contenu')
+    ->name('contenus.document-prive');
+
 });
+

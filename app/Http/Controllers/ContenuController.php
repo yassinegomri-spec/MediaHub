@@ -9,6 +9,7 @@ use App\Models\Publication;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ContenuController extends Controller
 {
@@ -41,15 +42,40 @@ class ContenuController extends Controller
 
     public function store(StorePublicationRequest $request)
 {
-    $contenu = new Publication($request->validated());
-    $contenu->user_id = Auth::id();
-    $contenu->save();
+    $donnees = $request->safe()->except(['image','fichier_media','document_prive',]);
+
+    if ($request->hasFile('image')) {
+        $donnees['image'] = $request
+            ->file('image')
+            ->store('publications/images', 'public');
+    }
+
+    if ($request->hasFile('fichier_media')) {
+        $fichier = $request->file('fichier_media');
+
+        $donnees['fichier_media'] = $fichier
+            ->store('publications/medias', 'public');
+
+        $donnees['type_media'] =
+            str_starts_with((string) $fichier->getMimeType(), 'audio/')
+                ? 'audio'
+                : 'video';
+    }
+
+    if ($request->hasFile('document_prive')) {
+        $donnees['document_prive'] = $request
+            ->file('document_prive')
+            ->store('publications/documents', 'local');
+    }
+
+    $donnees['user_id'] = auth()->id();
+
+    $contenu = Publication::create($donnees);
 
     return redirect()
         ->route('contenus.show', $contenu)
         ->with('succes', 'Publication créée avec succès.');
 }
-
 
 
     public function show(Publication $contenu)
@@ -68,16 +94,78 @@ class ContenuController extends Controller
     return view('contenus.edit', compact('contenu', 'categories'));
 }
 
-public function update(UpdatePublicationRequest $request, Publication $contenu)
-{
+public function update(
+    UpdatePublicationRequest $request,
+    Publication $contenu
+) {
     $this->authorize('update', $contenu);
 
-    $contenu->update($request->validated());
+    $donnees = $request->safe()->except([
+        'image',
+        'fichier_media',
+        'document_prive',
+    ]);
+
+    $anciensFichiers = [];
+
+    $champsFichiers = [
+        'image' => [
+            'disque' => 'public',
+            'dossier' => 'publications/images',
+        ],
+        'fichier_media' => [
+            'disque' => 'public',
+            'dossier' => 'publications/medias',
+        ],
+        'document_prive' => [
+            'disque' => 'local',
+            'dossier' => 'publications/documents',
+        ],
+    ];
+
+    foreach ($champsFichiers as $champ => $configuration) {
+        if (!$request->hasFile($champ)) {
+            continue;
+        }
+
+        $anciensFichiers[$champ] = [
+            'disque' => $configuration['disque'],
+            'chemin' => $contenu->{$champ},
+        ];
+
+        $donnees[$champ] = $request
+            ->file($champ)
+            ->store(
+                $configuration['dossier'],
+                $configuration['disque']
+            );
+    }
+
+    if ($request->hasFile('fichier_media')) {
+        $mime = (string) $request
+            ->file('fichier_media')
+            ->getMimeType();
+
+        $donnees['type_media'] =
+            str_starts_with($mime, 'audio/')
+                ? 'audio'
+                : 'video';
+    }
+
+    $contenu->update($donnees);
+
+    foreach ($anciensFichiers as $ancien) {
+        if ($ancien['chemin']) {
+            Storage::disk($ancien['disque'])
+                ->delete($ancien['chemin']);
+        }
+    }
 
     return redirect()
         ->route('contenus.show', $contenu)
         ->with('succes', 'Publication mise à jour avec succès.');
 }
+
 
 public function destroy(Publication $contenu)
 {
@@ -107,4 +195,19 @@ public function destroy(Publication $contenu)
             'password' => Str::random(48),
         ]);
     }
+    
+    public function documentPrive(Publication $contenu)
+{
+    $this->authorize('viewPrivateDocument', $contenu);
+
+    abort_unless(
+        $contenu->document_prive
+            && Storage::disk('local')->exists($contenu->document_prive),
+        404
+    );
+
+    return Storage::disk('local')
+        ->download($contenu->document_prive);
+}
+
 }

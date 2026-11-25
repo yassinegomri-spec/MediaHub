@@ -9,22 +9,28 @@ class UpdatePublicationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     public function rules(): array
     {
         return [
             'titre' => [
-                'required', 'string', 'min:10', 'max:255',
+                'required',
+                'string',
+                'min:10',
+                'max:255',
                 Rule::unique('publications', 'titre')
                     ->ignore($this->route('contenu')),
             ],
             'contenu' => ['required', 'string', 'min:20'],
             'categorie_id' => [
-                'required', 'integer',
+                'required',
+                'integer',
                 Rule::exists('categories', 'id'),
             ],
+            'image' => 'nullable|file|image|max:2048',
+            'fichier_media' => 'nullable|file|mimes:mp3,mp4,wav|max:20480',
         ];
     }
 
@@ -39,7 +45,7 @@ class UpdatePublicationRequest extends FormRequest
             'contenu.min' => 'Le contenu doit contenir au moins 20 caractères.',
             'categorie_id.required' => 'Veuillez choisir une catégorie.',
             'categorie_id.integer' => 'La catégorie choisie est invalide.',
-            'categorie_id.exists' => 'La catégorie choisie n\'existe pas.',
+            'categorie_id.exists' => 'La catégorie choisie n’existe pas.',
         ];
     }
 }
