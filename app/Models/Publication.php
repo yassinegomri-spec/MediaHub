@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use App\Events\PublicationCreee;
 
 class Publication extends Model
 {
@@ -45,6 +46,9 @@ protected static function booted(): void
             Storage::disk('local')->delete($publication->document_prive);
         }
     });
+    static::created(function (Publication $publication): void {
+    event(new PublicationCreee($publication));
+});
 }
 public function getUrlImageAttribute(): ?string
 {

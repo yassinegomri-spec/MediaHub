@@ -49,6 +49,7 @@ Route::get('/categories', [CategorieController::class, 'index'])
 
 Route::middleware(['auth', 'can:gerer-categories'])->group(function () {
     Route::resource('categories', CategorieController::class)
+        ->parameters(['categories' => 'categorie'])
         ->except(['index', 'show']);
 
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -57,11 +58,9 @@ Route::middleware(['auth', 'can:gerer-categories'])->group(function () {
     });
 
     Route::get(
-    '/contenus/{contenu}/document-prive',
-    [ContenuController::class, 'documentPrive']
-)
-    ->middleware('can:viewPrivateDocument,contenu')
-    ->name('contenus.document-prive');
-
+        '/contenus/{contenu}/document-prive',
+        [ContenuController::class, 'documentPrive']
+    )
+        ->middleware('can:viewPrivateDocument,contenu')
+        ->name('contenus.document-prive');
 });
-

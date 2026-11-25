@@ -3,11 +3,12 @@
 @section('titre', 'Créer une publication — MediaHub')
 
 @section('contenu')
-    <h1>Créer une publication</h1>
+    <h1 class="titre-formulaire">Créer une publication</h1>
 
     @include('partials.erreurs')
 
     <form
+        class="formulaire-publication"
         novalidate
         method="POST"
         action="{{ route('contenus.store') }}"
@@ -74,7 +75,9 @@
         </div>
 
         <div>
-            <label for="fichier_media">Fichier audio ou vidéo — 20 Mo maximum</label>
+            <label for="fichier_media">
+                Fichier audio ou vidéo — 20 Mo maximum
+            </label>
             <input
                 id="fichier_media"
                 name="fichier_media"
@@ -86,7 +89,9 @@
             @enderror
         </div>
 
-        <button type="submit">Publier</button>
-        <a href="{{ route('contenus.index') }}">Annuler</a>
+        <div class="actions-formulaire">
+            <button type="submit">Publier</button>
+            <a href="{{ route('contenus.index') }}">Annuler</a>
+        </div>
     </form>
 @endsection

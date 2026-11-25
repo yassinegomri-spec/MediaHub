@@ -5,15 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCategorieRequest;
 use App\Http\Requests\UpdateCategorieRequest;
 use App\Models\Categorie;
+use Illuminate\Support\Facades\Cache;
 
 class CategorieController extends Controller
 {
     public function index()
     {
-        $categories = Categorie::withCount('publications')
-            ->orderBy('nom')
-            ->paginate(5)
-            ->withQueryString();
+        $categories = Cache::remember('categories.liste', 3600, function () {
+            return Categorie::withCount('publications')
+                ->orderBy('nom')
+                ->get();
+        });
 
         return view('categories.index', compact('categories'));
     }
@@ -26,6 +28,7 @@ class CategorieController extends Controller
     public function store(StoreCategorieRequest $request)
     {
         Categorie::create($request->validated());
+        Cache::forget('categories.liste');
 
         return redirect()
             ->route('categories.index')
@@ -40,6 +43,7 @@ class CategorieController extends Controller
     public function update(UpdateCategorieRequest $request, Categorie $categorie)
     {
         $categorie->update($request->validated());
+        Cache::forget('categories.liste');
 
         return redirect()
             ->route('categories.index')
@@ -48,7 +52,6 @@ class CategorieController extends Controller
 
     public function destroy(Categorie $categorie)
     {
-        // Ne pas supprimer une catégorie utilisée par une publication.
         if ($categorie->publications()->withTrashed()->exists()) {
             return redirect()
                 ->route('categories.index')
@@ -56,6 +59,7 @@ class CategorieController extends Controller
         }
 
         $categorie->delete();
+        Cache::forget('categories.liste');
 
         return redirect()
             ->route('categories.index')
